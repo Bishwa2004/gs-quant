@@ -49,22 +49,25 @@ class ConstraintType(Enum):
     ESG = "Esg"
 
 
+from typing import List, Optional
+
+
 class HedgeExclusions:
     """
     List of assets, countries, regions, sectors, and industries to exclude from the hedge universe
     """
 
     def __init__(self,
-                 assets: List[str] = None,
-                 countries: List[str] = None,
-                 regions: List[str] = None,
-                 sectors: List[str] = None,
-                 industries: List[str] = None):
-        self.__assets = assets
-        self.__countries = countries
-        self.__regions = regions
-        self.__sectors = sectors
-        self.__industries = industries
+                 assets: Optional[List[str]] = None,
+                 countries: Optional[List[str]] = None,
+                 regions: Optional[List[str]] = None,
+                 sectors: Optional[List[str]] = None,
+                 industries: Optional[List[str]] = None):
+        self.__assets = assets or []
+        self.__countries = countries or []
+        self.__regions = regions or []
+        self.__sectors = sectors or []
+        self.__industries = industries or []
 
     @property
     def assets(self) -> List[str]:
@@ -72,7 +75,7 @@ class HedgeExclusions:
 
     @assets.setter
     def assets(self, value: List[str]):
-        self.__assets = value
+        self.__assets = value or []
 
     @property
     def countries(self) -> List[str]:
@@ -80,7 +83,7 @@ class HedgeExclusions:
 
     @countries.setter
     def countries(self, value: List[str]):
-        self.__countries = value
+        self.__countries = value or []
 
     @property
     def regions(self) -> List[str]:
@@ -88,7 +91,7 @@ class HedgeExclusions:
 
     @regions.setter
     def regions(self, value: List[str]):
-        self.__regions = value
+        self.__regions = value or []
 
     @property
     def sectors(self) -> List[str]:
@@ -96,7 +99,7 @@ class HedgeExclusions:
 
     @sectors.setter
     def sectors(self, value: List[str]):
-        self.__sectors = value
+        self.__sectors = value or []
 
     @property
     def industries(self) -> List[str]:
@@ -104,23 +107,26 @@ class HedgeExclusions:
 
     @industries.setter
     def industries(self, value: List[str]):
-        self.__industries = value
+        self.__industries = value or []
 
     def to_dict(self):
         response = {}
         all_constraints = []
+
         if self.countries:
-            all_constraints = all_constraints + self._get_exclusions(self.countries, ConstraintType.COUNTRY)
+            all_constraints.append({'type': 'Country', 'parameters': self.countries})
         if self.regions:
-            all_constraints = all_constraints + self._get_exclusions(self.regions, ConstraintType.REGION)
+            all_constraints.append({'type': 'Region', 'parameters': self.regions})
         if self.sectors:
-            all_constraints = all_constraints + self._get_exclusions(self.sectors, ConstraintType.SECTOR)
+            all_constraints.append({'type': 'Sector', 'parameters': self.sectors})
         if self.industries:
-            all_constraints = all_constraints + self._get_exclusions(self.industries, ConstraintType.INDUSTRY)
-        if len(all_constraints) > 0:
-            response['classificationConstraints'] = all_constraints
+            all_constraints.append({'type': 'Industry', 'parameters': self.industries})
         if self.assets:
-            response['assetConstraints'] = self._get_exclusions(self.assets, ConstraintType.ASSET)
+            response['assets'] = self.assets
+
+        if all_constraints:
+            response['constraints'] = all_constraints
+
         return response
 
     @staticmethod
